@@ -67,26 +67,34 @@ def extract_article_info(soup, url):
     }
 
 def collect_trending(output): 
-    pass
+    #Fetch the news homepage
+    soup = fetch(NEWS_HOME)
+
+    # Get trending article links
+    trending_links = find_trending_links(soup, limit=5)
+    logger.info(f"Found {len(trending_links)} trending links.")
+
+    # Extract info from each article
+    articles = []
+    for url in trending_links:
+        logger.info(f"Fetching article: {url}")
+        article_soup = fetch(url)
+        info = extract_article_info(article_soup, url)
+        articles.append(info)
+
+    # Save to JSON
+    with open(output, "w", encoding="utf-8") as f:
+        json.dump(articles, f, ensure_ascii=False, indent=2)
+
+    logger.info(f"Saved trending articles to {output}")
+
 
 def main():
-    # Step 1: Fetch the page
-    soup = fetch(NEWS_HOME)
-    
-    # Step 2: Print the first 500 characters to make sure we got HTML
-    print("Fetched HTML preview:\n", soup.prettify()[:500], "\n")
-    
-    # Step 3: Extract trending links
-    links = find_trending_links(soup)
-    print(f"Found {len(links)} trending links:")
-    for link in links:
-        print(link)
-    
-    # Step 4: Extract article info for each link
-    url = "https://montrealgazette.com/news/crime/baby-found-abandoned-in-longueuil-bus-shelter"  
-    soup = fetch(url)
-    article_info = extract_article_info(soup, url)
-    print(json.dumps(article_info, indent=2))
+    parser = argparse.ArgumentParser(description="Collect trending articles from Montreal Gazette")
+    parser.add_argument("-o", "--output", type=str, default="trending.json", help="Output JSON file")
+    args = parser.parse_args()
+
+    collect_trending(args.output)
 
 
 if __name__ == "__main__":
