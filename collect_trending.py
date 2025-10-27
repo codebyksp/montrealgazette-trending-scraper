@@ -39,8 +39,33 @@ def find_trending_links(soup, limit=5):
 
     return links
 
-def extract_article_info(soup, url): 
-    pass
+def extract_article_info(soup, url):
+    # Title
+    title_tag = soup.select_one("h1.article-title")
+    title = title_tag.get_text(strip=True) if title_tag else ""
+
+    # Blurb / subtitle
+    blurb_tag = soup.select_one("p.article-subtitle")
+    blurb = blurb_tag.get_text(strip=True) if blurb_tag else ""
+
+    # Author
+    author_tag = soup.select_one("span.published-by__author a")
+    author = author_tag.get_text(strip=True) if author_tag else ""
+
+    # Publication date
+    date_tag = soup.select_one("div.published-date__since")
+    if date_tag:
+        publication_date = date_tag.get_text(strip=True).replace("Published ", "")
+    else:
+        publication_date = ""
+
+    return {
+        "title": title,
+        "publication_date": publication_date,
+        "author": author,
+        "blurb": blurb
+    }
+
 def collect_trending(output): 
     pass
 
@@ -56,6 +81,12 @@ def main():
     print(f"Found {len(links)} trending links:")
     for link in links:
         print(link)
+    
+    # Step 4: Extract article info for each link
+    url = "https://montrealgazette.com/news/crime/baby-found-abandoned-in-longueuil-bus-shelter"  
+    soup = fetch(url)
+    article_info = extract_article_info(soup, url)
+    print(json.dumps(article_info, indent=2))
 
 
 if __name__ == "__main__":
